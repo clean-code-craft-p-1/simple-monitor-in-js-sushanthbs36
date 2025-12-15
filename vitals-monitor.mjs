@@ -1,32 +1,26 @@
+import { vitalsThresholds } from "./vitals-thresholds.mjs";
+import { checkSingleVital } from "./vitals-processing.mjs"; 
+import { vitalsMessage } from "./vitals-message.mjs";
 
-export async function vitalsOk(temperature, pulseRate, spo2) {
-  if (temperature > 102 || temperature < 95) {
-    console.log("Temperature is critical!");
-    for (let i = 0; i < 6; i++) {
-      process.stdout.write("\r* ");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      process.stdout.write("\r *");
-      await new Promise(resolve => setTimeout(resolve, 1000));
+
+const noopAlerter = async () => {};
+export async function monitorVitals(vitals = {}, alerter = noopAlerter) {
+  const vitalsWithDefinedThresholds = Object.entries(vitals)
+    .filter(([name]) => vitalsThresholds[name])
+    .map(([name, value]) => ({ 
+      name, 
+      value, 
+      thresholds: vitalsThresholds[name],
+      message: vitalsMessage[name] 
+    }));
+
+  for (const vital of vitalsWithDefinedThresholds) {
+    const alertMessage = await checkSingleVital(vital);
+    if (alertMessage) {
+      await alerter(alertMessage);
+      return false;
     }
-    return false;
-  } else if (pulseRate < 60 || pulseRate > 100) {
-    console.log("Pulse Rate is out of range!");
-    for (let i = 0; i < 6; i++) {
-      process.stdout.write("\r* ");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      process.stdout.write("\r *");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-    return false;
-  } else if (spo2 < 90) {
-    console.log("Oxygen Saturation out of range!");
-    for (let i = 0; i < 6; i++) {
-      process.stdout.write("\r* ");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      process.stdout.write("\r *");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-    return false;
   }
+
   return true;
 }
