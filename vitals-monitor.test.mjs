@@ -1,14 +1,18 @@
 import { expect } from 'chai';
 import { monitorVitals } from './vitals-monitor.mjs';
 
-let alertMessageLogged = '';
-export const mockAlerter = async (message) => { 
-  alertMessageLogged = message;
-};
+function createMockAlerter() {
+  let alertMessageLogged = '';
 
-beforeEach(() => {
-  alertMessageLogged = '';
-});
+  const mockAlerter = async (message) => {
+    alertMessageLogged = message;
+  };
+
+  return {
+    mockAlerter,
+    getMessage: () => alertMessageLogged
+  };
+}
 
 const testCases = [
   {
@@ -86,9 +90,11 @@ const testCases = [
 describe('vitals checker', function () {
   testCases.forEach(({ description, vitals, expected, message, noAlerter }) => {
     it(description, async function () {
+
+      const { mockAlerter, getMessage } = createMockAlerter();
       const result = await monitorVitals(vitals, noAlerter ? undefined : mockAlerter);
       expect(result).to.equal(expected);
-      if (message) expect(alertMessageLogged).to.include(message);
+      if (message) expect(getMessage()).to.include(message);
     });
   });
 });
