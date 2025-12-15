@@ -5,7 +5,7 @@ import { vitalsMessage } from "./vitals-message.mjs";
 
 const noopAlerter = async () => {};
 export async function monitorVitals(vitals = {}, alerter = noopAlerter) {
-  const vitalsWithThresholds = Object.entries(vitals)
+  const vitalsWithDefinedThresholds = Object.entries(vitals)
     .filter(([name]) => vitalsThresholds[name])
     .map(([name, value]) => ({ 
       name, 
@@ -14,7 +14,7 @@ export async function monitorVitals(vitals = {}, alerter = noopAlerter) {
       message: vitalsMessage[name] 
     }));
 
-  for (const vital of vitalsWithThresholds) {
+  for (const vital of vitalsWithDefinedThresholds) {
     const alertMessage = await checkSingleVital(vital);
     if (alertMessage) {
       await alerter(alertMessage);
